@@ -13,7 +13,7 @@
 class MacAddress{
 
     public $return_array = array(); // 返回带有MAC地址的字串数组
-    public $mac_addr;
+    public $mac_addr = array();
 
 
     static function  getMacAddr(){
@@ -33,27 +33,33 @@ class MacAddress{
                 $static->forWindows();
                 break;
         }
+
         $temp_array = array();
         foreach($static->return_array as $value){
-            if(preg_match(
-                "/ether ([0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f][:-][0-9a-f][0-9a-f])/i", $value, $temp_array)){
-                $static->mac_addr = $temp_array[1];
-                break;
+            if(preg_match("/[0-9a-fA-F][0-9a-fA-F][:-][0-9a-fA-F][0-9a-fA-F][:-][0-9a-fA-F][0-9a-fA-F][:-][0-9a-fA-F][0-9a-fA-F][:-][0-9a-fA-F][0-9a-fA-F][:-][0-9a-fA-F][0-9a-fA-F]/", $value, $temp_array)){
+                $temp_array[0] = str_replace("-", "", $temp_array[0]);
+                $temp_array[0] = str_replace(":", "", $temp_array[0]);
+
+                $static->mac_addr[] = $temp_array[0];
             }
         }
         unset($temp_array);
-        $static->mac_addr = str_replace("-", "", $static->mac_addr);
-        $static->mac_addr = str_replace(":", "", $static->mac_addr);
 
         return $static->mac_addr;
     }
 
     function forWindows(){
         @exec("ipconfig /all", $this->return_array);
-        if($this->return_array) return $this->return_array;else{
+        if($this->return_array){
+            return $this->return_array;
+        }
+        else{
             $ipconfig = $_SERVER["WINDIR"]."\system32\ipconfig.exe";
-            if(is_file($ipconfig)) @exec($ipconfig." /all", $this->return_array);else
-                @exec($_SERVER["WINDIR"]."\system\ipconfig.exe /all", $this->return_array);
+            echo '<pre>';var_dump($ipconfig);exit;
+            if(is_file($ipconfig))
+                @exec($ipconfig." /all", $this->return_array);
+            else
+                @exec($_SERVER["windir"]."\system\ipconfig.exe /all", $this->return_array);
 
             return $this->return_array;
         }
@@ -71,14 +77,7 @@ class MacAddress{
 
         @exec("{$path} addr", $return_array);
         foreach ($return_array as $value) {
-
-            if (
-            preg_match(
-                "/ether ([0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f])/i",
-                $value,
-                $temp_array
-            )
-            ) {
+            if (preg_match("/ether ([0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f][:-]" . "[0-9a-f][0-9a-f])/i", $value, $temp_array)) {
                 $this->mac_addr = $temp_array[1];
                 break;
             }
